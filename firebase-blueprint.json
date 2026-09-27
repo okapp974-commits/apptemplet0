@@ -1,0 +1,150 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile with role-based access.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "role": { "type": "string", "enum": ["manager", "representative", "developer"] },
+        "status": { "type": "string", "enum": ["active", "inactive"] },
+        "baseSalary": { "type": "number" },
+        "salaryType": { "type": "string" },
+        "targetBonus": { "type": "number" },
+        "photoURL": { "type": "string" },
+        "password": { "type": "string" }
+      },
+      "required": ["uid", "name", "role", "status"]
+    },
+    "Product": {
+      "title": "Product",
+      "description": "Inventory products",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "price": { "type": "number" },
+        "stock": { "type": "number" },
+        "unit": { "type": "string" },
+        "category": { "type": "string" },
+        "sortOrder": { "type": "number" }
+      },
+      "required": ["name", "price"]
+    },
+    "Customer": {
+      "title": "Customer",
+      "description": "Customer and shop details",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "shopName": { "type": "string" },
+        "ownerName": { "type": "string" },
+        "phone": { "type": "string" },
+        "address": { "type": "string" },
+        "location": { "type": "object" },
+        "openingBalance": { "type": "number" },
+        "representativeId": { "type": "string" },
+        "representativeName": { "type": "string" },
+        "timestamp": { "type": "string" }
+      },
+      "required": ["shopName"]
+    },
+    "Invoice": {
+      "title": "Invoice",
+      "description": "Sales invoices",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "customerId": { "type": "string" },
+        "customerName": { "type": "string" },
+        "items": { "type": "array" },
+        "totalAmount": { "type": "number" },
+        "paidAmount": { "type": "number" },
+        "discount": { "type": "number" },
+        "representativeId": { "type": "string" },
+        "representativeName": { "type": "string" },
+        "timestamp": { "type": "string" },
+        "date": { "type": "string" }
+      }
+    },
+    "Settlement": {
+      "title": "Settlement",
+      "description": "Daily settlements from representatives",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "representativeId": { "type": "string" },
+        "representativeName": { "type": "string" },
+        "totalAmount": { "type": "number" },
+        "items": { "type": "array" },
+        "status": { "type": "string" },
+        "timestamp": { "type": "string" },
+        "date": { "type": "string" }
+      }
+    },
+    "Loan": {
+      "title": "Loan",
+      "description": "Employee loans or advances",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "employeeId": { "type": "string" },
+        "employeeName": { "type": "string" },
+        "amount": { "type": "number" },
+        "reason": { "type": "string" },
+        "date": { "type": "string" },
+        "status": { "type": "string" },
+        "timestamp": { "type": "string" }
+      }
+    },
+    "Attendance": {
+      "title": "Attendance",
+      "description": "Employee attendance records",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "employeeId": { "type": "string" },
+        "employeeName": { "type": "string" },
+        "date": { "type": "string" },
+        "timestamp": { "type": "string" },
+        "type": { "type": "string" }
+      }
+    },
+    "Notification": {
+      "title": "Notification",
+      "description": "System notifications and alerts",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "message": { "type": "string" },
+        "type": { "type": "string" },
+        "senderId": { "type": "string" },
+        "senderName": { "type": "string" },
+        "recipientId": { "type": "string" },
+        "isRead": { "type": "boolean" },
+        "timestamp": { "type": "string" },
+        "date": { "type": "string" },
+        "targetTab": { "type": "string" }
+      }
+    }
+  },
+  "firestore": {
+    "users": { "schema": "User", "description": "User profiles" },
+    "products": { "schema": "Product", "description": "Inventory" },
+    "customers": { "schema": "Customer", "description": "Clients list" },
+    "invoices": { "schema": "Invoice", "description": "Sales records" },
+    "settlements": { "schema": "Settlement", "description": "Financial settlements" },
+    "loans": { "schema": "Loan", "description": "Salary advances" },
+    "attendance": { "schema": "Attendance", "description": "Daily presence" },
+    "notifications": { "schema": "Notification", "description": "System messages" },
+    "car_loadings": { "schema": { "type": "object" }, "description": "Inventory loaded to cars" },
+    "loading_requests": { "schema": { "type": "object" }, "description": "Inventory requests" },
+    "car_returns": { "schema": { "type": "object" }, "description": "Inventory returned from cars" },
+    "routes": { "schema": { "type": "object" }, "description": "Representative routes" },
+    "settings": { "schema": { "type": "object" }, "description": "App settings" },
+    "system_config": { "schema": { "type": "object" }, "description": "System configuration" }
+  }
+}

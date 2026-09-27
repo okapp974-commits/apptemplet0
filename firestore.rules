@@ -1,0 +1,210 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users
+    // Fields: uid, name, email, role (manager, accountant, supervisor, representative, storekeeper, admin)
+    //
+    // Collection: products
+    // Fields: id, name, price, order, flavors (array of strings)
+    //
+    // Collection: loading_requests
+    // Fields: id, representativeId, representativeName, date, items (array of objects), status (pending, approved, rejected), timestamp
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && (
+        (request.auth.token.email in ["okapp974@gmail.com", "admin@ok.com", "mohsen@ok.com", "amin@ok.com"]) ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'manager', 'developer'])
+      );
+    }
+
+    function hasRole(role) {
+      return isAdmin() || (
+        isAuthenticated() && 
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == role
+      );
+    }
+
+    function isManager() { return hasRole('manager'); }
+    function isAccountant() { return hasRole('accountant'); }
+    function isSupervisor() { return hasRole('supervisor'); }
+    function isRepresentative() { return hasRole('representative'); }
+    function isStorekeeper() { return hasRole('storekeeper'); }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isDocOwner() {
+      return isAuthenticated() && request.auth.uid == resource.data.representativeId;
+    }
+
+    // ===============================================================
+    // Domain Validators
+    // ===============================================================
+    function isValidLoadingRequest(data) {
+      return data.representativeId is string &&
+             data.representativeName is string &&
+             data.date is string &&
+             data.items is list &&
+             data.status in ['pending', 'approved', 'rejected'] &&
+             (!('editRequested' in data) || data.editRequested is bool) &&
+             (!('canEdit' in data) || data.canEdit is bool) &&
+             data.timestamp != null;
+    }
+
+    function isValidCustomer(data) {
+      return data.shopName is string && data.shopName.size() > 0 &&
+             data.ownerName is string && data.ownerName.size() > 0 &&
+             (!('status' in data) || data.status in ['active', 'suspended']);
+    }
+
+    // ===============================================================
+    // Collection Rules
+    // ===============================================================
+
+    // Users collection
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && (request.auth.uid == userId || isAdmin() || isManager() || isSupervisor());
+      allow update: if isAuthenticated() && (
+        (request.auth.uid == userId && (request.resource.data.role == resource.data.role || isAdmin())) || 
+        isAdmin() || 
+        ((isManager() || isSupervisor()) && resource.data.email != "okapp974@gmail.com")
+      );
+      allow delete: if (isAdmin() || isManager() || isSupervisor()) && 
+                    get(/databases/$(database)/documents/users/$(userId)).data.email != "okapp974@gmail.com";
+    }
+
+    // Products collection
+    match /products/{productId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin() || isManager() || isStorekeeper() || isSupervisor();
+    }
+
+    // Customers collection
+    match /customers/{customerId} {
+      allow read: if isAuthenticated();
+      allow create: if (isAdmin() || isManager() || isAccountant() || isRepresentative() || isSupervisor()) && isValidCustomer(request.resource.data);
+      allow update: if (isAdmin() || isManager() || isAccountant() || isRepresentative() || isSupervisor()) && isValidCustomer(request.resource.data);
+      allow delete: if isAdmin() || isManager() || isSupervisor();
+    }
+
+    // Invoices collection
+    match /invoices/{invoiceId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && (isAdmin() || isManager() || isAccountant() || isRepresentative() || isSupervisor());
+      allow update: if isAdmin() || isManager() || isAccountant() || isSupervisor();
+      allow delete: if isAdmin() || isManager() || isSupervisor();
+    }
+
+    // Settlements collection
+    match /settlements/{settlementId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && (isAdmin() || isManager() || isStorekeeper() || isRepresentative() || isSupervisor());
+      allow update: if isAuthenticated() && (isAdmin() || isManager() || isStorekeeper() || isSupervisor() || (isRepresentative() && resource.data.representativeId == request.auth.uid && !resource.data.isConfirmed));
+      allow delete: if isAdmin() || isManager() || isSupervisor();
+    }
+
+    // Loans collection
+    match /loans/{loanId} {
+      allow read: if isAuthenticated();
+      allow create: if isAdmin() || isManager() || isAccountant() || isSupervisor() || (isRepresentative() && request.resource.data.employeeId == request.auth.uid);
+      allow update: if isAdmin() || isManager() || isAccountant() || isSupervisor();
+      allow delete: if isAdmin() || isManager() || isSupervisor();
+    }
+
+    // Attendance collection
+    match /attendance/{attendanceId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update: if isAdmin() || isManager() || isSupervisor();
+      allow delete: if isAdmin() || isManager() || isSupervisor();
+    }
+
+    // Settings collection
+    match /settings/{settingId} {
+      allow read: if true;
+      allow write: if isAdmin() || isManager() || isSupervisor();
+    }
+
+    // Routes collection
+    match /routes/{routeId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && (
+        isAdmin() || isManager() || isSupervisor() || 
+        (request.resource.data.representativeId == request.auth.uid)
+      );
+      allow update: if isAuthenticated() && (
+        isAdmin() || isManager() || isSupervisor() || 
+        resource.data.representativeId == request.auth.uid
+      );
+      allow delete: if isAdmin() || isManager() || isSupervisor();
+    }
+
+    // Notifications collection
+    match /notifications/{notificationId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() && (
+        (resource.data.recipientId == request.auth.uid) || 
+        isAdmin() || isManager() || isSupervisor()
+      );
+      allow delete: if isAdmin() || isManager() || isSupervisor();
+    }
+
+    // Car Loadings collection
+    match /car_loadings/{loadingId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin() || isManager() || isStorekeeper() || isSupervisor();
+    }
+
+    // Car Returns collection
+    match /car_returns/{returnId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin() || isManager() || isStorekeeper() || isSupervisor();
+    }
+
+    // Loading requests collection
+    match /loading_requests/{requestId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && (
+        isAdmin() || isManager() || isSupervisor() || 
+        (isRepresentative() && request.resource.data.representativeId == request.auth.uid && 
+          (!('canEdit' in request.resource.data) || request.resource.data.canEdit == false) &&
+          (!('editRequested' in request.resource.data) || request.resource.data.editRequested == false)
+        )
+      ) && isValidLoadingRequest(request.resource.data);
+      allow update: if isAuthenticated() && (
+        isAdmin() || isManager() || isSupervisor() || 
+        (isRepresentative() && resource.data.representativeId == request.auth.uid && 
+          (resource.data.status == 'pending' || 
+           resource.data.canEdit == true ||
+           (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['editRequested']) && request.resource.data.editRequested == true)
+          )
+        )
+      ) && isValidLoadingRequest(request.resource.data);
+      allow delete: if isAdmin() || isManager() || isSupervisor();
+    }
+
+    // System config collection
+    match /system_config/{configId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+  }
+}

@@ -1,0 +1,125 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap');
+@import url('https://unpkg.com/leaflet@1.9.4/dist/leaflet.css');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Playfair Display", serif;
+  
+  --color-primary: #0369a1;
+  --color-secondary: #0ea5e9;
+  --color-accent: #38bdf8;
+  --color-bg: #f0f9ff;
+  --color-ink: #082f49;
+
+  /* Compatible color overrides for image generation */
+  --color-blue-50: #f0f9ff;
+  --color-blue-100: #e0f2fe;
+  --color-blue-600: #0284c7;
+  --color-red-50: #fef2f2;
+  --color-red-500: #ef4444;
+  --color-red-600: #dc2626;
+  --color-green-100: #dcfce7;
+  --color-green-600: #16a34a;
+  --color-purple-100: #f3e8ff;
+  --color-purple-600: #9333ea;
+  --color-gray-100: #f1f5f9;
+  --color-gray-600: #475569;
+
+  /* Opacity variants - using solid colors for better visibility in exports */
+  --color-primary-5: #f0f9ff;
+  --color-secondary-40: #7dd3fc;
+  --color-secondary-60: #38bdf8;
+  --color-accent-10: #e0f2fe;
+  --color-accent-5: #f0f9ff;
+  --color-bg-40: #f0f9ff;
+  --color-bg-50: #f0f9ff;
+  --color-bg-30: #f0f9ff;
+  --color-white-80: #ffffff;
+  --color-white-5: #ffffff;
+  --color-primary-10: #bae6fd;
+}
+
+@layer base {
+  body {
+    @apply bg-bg text-ink font-sans antialiased;
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  h1, h2, h3, h4 {
+    @apply font-serif text-primary;
+  }
+
+  /* Custom Scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-blue-50;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-primary/30 rounded-full hover:bg-primary/50 transition-colors;
+  }
+
+  .leaflet-container {
+    width: 100%;
+    height: 100%;
+    z-index: 10;
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply bg-white border-2 border-primary/10 shadow-md rounded-[2.5rem] overflow-hidden;
+  }
+  
+  .btn-primary {
+    @apply bg-primary text-white px-6 py-3 rounded-2xl font-bold transition-all active:scale-95 disabled:opacity-50 shadow-lg shadow-primary/20 hover:bg-primary/90;
+  }
+  
+  .input-field {
+    @apply w-full bg-white border-2 border-primary/20 rounded-xl px-4 py-3 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all text-ink font-medium;
+  }
+}
+
+@media print {
+  /* Hide sidebar, headers, footers, navigation, search boxes, actions, and popups */
+  aside,
+  nav,
+  header,
+  .print\:hidden,
+  button,
+  input,
+  select,
+  textarea,
+  .toast,
+  .fixed.inset-0.bg-ink\/60 {
+    display: none !important;
+  }
+
+  /* Reset layout for basic screen print fallback */
+  html, body {
+    width: 100% !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+    color: #000 !important;
+    overflow: visible !important;
+  }
+
+  @page {
+    margin: 10mm !important;
+    size: auto !important;
+  }
+
+  /* Make sure printing the whole container uses clean layout */
+  .min-h-screen {
+    display: block !important;
+    height: auto !important;
+    background: #fff !important;
+  }
+}

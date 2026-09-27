@@ -1,0 +1,8 @@
+{
+  "name": "شركة اوك",
+  "description": "تطبيق شامل لشركة OK لإدارة المنتجات والعملاء والفواتير وأدوار الفريق (مدير، محاسب، مشرف، مندوب، مخزن).",
+  "requestFramePermissions": [
+    "geolocation"
+  ],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
